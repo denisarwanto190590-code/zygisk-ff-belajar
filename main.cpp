@@ -39,8 +39,8 @@ _WorldToScreenPoint WorldToScreenPoint_Orig = nullptr;
 // =========================================================
 uintptr_t DapatkanBaseAddress(const char* nama_library) {
     uintptr_t address = 0;
-    char jalur[256]; // Memperbaiki ukuran array agar tidak error string
-    char baris[512]; // Memperbaiki ukuran array agar tidak error string
+    char jalur[256]; // Sudah benar memakai ukuran array
+    char baris[512]; // Sudah benar memakai ukuran array
     
     FILE* f = fopen("/proc/self/maps", "r");
     if (!f) return 0;
@@ -153,7 +153,7 @@ public:
 private:
     zygisk::Api* api;
     JNIEnv* env;
-};
+}; // PERBAIKAN: Menutup kurung kelas dengan benar
 
-// Pemanggilan murni menggunakan makro zygisk bawaan tanpa titik koma di ujungnya
+// PERBAIKAN: Mendaftarkan modul ke Zygisk tanpa menggunakan tanda titik koma (;)
 REGISTER_ZYGISK_MODULE(BelajarZygiskModule)
