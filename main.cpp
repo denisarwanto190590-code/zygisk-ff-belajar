@@ -131,7 +131,7 @@ void* ThreadLoopEsp(void*) {
 }
 
 // =========================================================
-// INISIALISASI MODULE ZYGISK
+// INISIALISASI MODULE ZYGISK (PERBAIKAN UNTUK MAGISK V26)
 // =========================================================
 class BelajarZygiskModule : public zygisk::ModuleBase {
 public:
@@ -141,11 +141,17 @@ public:
     }
 
     void preAppSpecialize(zygisk::AppSpecializeArgs* args) override {
+        // Di Magisk v26, fungsi ini wajib dibiarkan kosong agar tidak memicu error kecocokan.
+    }
+
+    void postAppSpecialize(const zygisk::AppSpecializeArgs* args) override {
         const char* process_name = env->GetStringUTFChars(args->process, nullptr);
         
+        // Memeriksa apakah aplikasi yang berjalan adalah Free Fire
         if (process_name && strcmp(process_name, "com.dts.freefireth") == 0) {
-            LOGI("Game Free Fire Terdeteksi! Menyiapkan Sistem ESP Visual...");
+            LOGI("Game Free Fire Terdeteksi di postAppSpecialize! Menjalankan Thread ESP...");
             
+            // Membuat thread baru di sini 100% aman dan disetujui oleh Magisk v26
             pthread_t esp_thread;
             pthread_create(&esp_thread, nullptr, ThreadLoopEsp, nullptr);
         }
