@@ -1,0 +1,36 @@
+name: Build Zygisk Module
+
+# Script berjalan otomatis setiap kali kamu klik tombol simpan/commit di GitHub
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Tombol tambahan agar bisa klik "Run" secara manual
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Mengambil semua file kodingan dari repository GitHub kamu
+      - name: Ambil Kode Proyek
+        uses: actions/checkout@v4
+
+      # 2. Memasang alat masak Android NDK versi r25c di server GitHub
+      - name: Siapkan Android NDK r25c
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r25c
+          add-to-path: true
+
+      # 3. Mengeksekusi instruksi dari file Android.mk dan Application.mk kamu
+      - name: Mulai Kompilasi Kode (ndk-build)
+        run: |
+          ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk
+
+      # 4. Membungkus file .so hasil masakan menjadi file zip untuk kamu download
+      - name: Simpan Hasil File SO Jadi
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hasil-SO-Zygisk
+          path: libs/arm64-v8a/libzygisk_ff_belajar.so
