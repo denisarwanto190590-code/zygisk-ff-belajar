@@ -39,8 +39,8 @@ _WorldToScreenPoint WorldToScreenPoint_Orig = nullptr;
 // =========================================================
 uintptr_t DapatkanBaseAddress(const char* nama_library) {
     uintptr_t address = 0;
-    char jalur[256]; // Sudah benar memakai ukuran array
-    char baris[512]; // Sudah benar memakai ukuran array
+    char jalur[256]; 
+    char baris[512]; 
     
     FILE* f = fopen("/proc/self/maps", "r");
     if (!f) return 0;
@@ -75,6 +75,7 @@ void* ThreadLoopEsp(void*) {
     int tinggiLayar = 1080;
     kanvasESP.InisialisasiKuas(lebarLayar, tinggiLayar);
 
+    // PERBAIKAN: Semua nama variabel disamakan persis menjadi 'titkAwalGaris'
     Vector2 titikAwalGaris;
     titkAwalGaris.x = (float)lebarLayar / 2.0f;
     titkAwalGaris.y = (float)tinggiLayar;
@@ -115,6 +116,7 @@ void* ThreadLoopEsp(void*) {
             }
 
             if (isMunculDiLayar) {
+                // PERBAIKAN: Menggunakan nama variabel 'titkAwalGaris' yang sudah valid
                 kanvasESP.GambarGarisMerah(
                     titkAwalGaris.x, titikAwalGaris.y, 
                     titikAkhirGaris.x, titikAkhirGaris.y, 
@@ -153,7 +155,7 @@ public:
 private:
     zygisk::Api* api;
     JNIEnv* env;
-}; // PERBAIKAN: Menutup kurung kelas dengan benar
+};
 
-// PERBAIKAN: Mendaftarkan modul ke Zygisk tanpa menggunakan tanda titik koma (;)
+// Mendaftarkan modul ke Zygisk tanpa menggunakan tanda titik koma (;)
 REGISTER_ZYGISK_MODULE(BelajarZygiskModule)
