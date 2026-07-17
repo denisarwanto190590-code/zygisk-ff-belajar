@@ -1,10 +1,9 @@
 name: Build Zygisk Module
 
-# Script berjalan otomatis setiap kali kamu klik tombol simpan/commit di GitHub
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Tombol tambahan agar bisa klik "Run" secara manual
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -28,9 +27,21 @@ jobs:
         run: |
           ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk
 
-      # 4. Membungkus file .so hasil masakan menjadi file zip untuk kamu download
-      - name: Simpan Hasil File SO Jadi
+      # 4. Menyusun struktur file dan mengompresnya menjadi ZIP otomatis
+      - name: Proses dan Kemas Jadi ZIP Modul Magisk
+        run: |
+          # Memindahkan file biner arm64-v8a.so ke halaman depan (root)
+          cp libs/arm64-v8a/arm64-v8a.so ./
+          
+          # Membuat folder penampung sementara untuk zip agar bersih
+          mkdir -p keluar_modul
+          
+          # Membungkus file-file wajib secara sejajar ke dalam file zip
+          zip -r keluar_modul/Zygisk_ESP_FF_Belajar.zip arm64-v8a.so customize.sh module.prop
+
+      # 5. Mengunggah file ZIP instan yang siap download dan siap flash
+      - name: Unggah File ZIP Siap Flash
         uses: actions/upload-artifact@v4
         with:
-          name: Hasil-SO-Zygisk
-          path: libs/arm64-v8a/libzygisk_ff_belajar.so
+          name: Modul-Zygisk-Siap-Flash
+          path: keluar_modul/Zygisk_ESP_FF_Belajar.zip
