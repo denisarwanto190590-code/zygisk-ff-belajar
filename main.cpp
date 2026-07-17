@@ -77,8 +77,8 @@ void* ThreadLoopEsp(void*) {
 
     // PERBAIKAN: Semua nama variabel disamakan persis menjadi 'titkAwalGaris'
     Vector2 titikAwalGaris;
-    titkAwalGaris.x = (float)lebarLayar / 2.0f;
-    titkAwalGaris.y = (float)tinggiLayar;
+    titikAwalGaris.x = (float)lebarLayar / 2.0f;
+    titikAwalGaris.y = (float)tinggiLayar;
 
     while (true) {
         if (WorldToScreenPoint_Orig == nullptr) {
