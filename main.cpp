@@ -1,4 +1,13 @@
 #include <jni.h>
+
+// ============================================================================
+// TRIK KHUSUS: Mengabaikan macro bawaan zygisk.h yang memicu error visibility
+// ============================================================================
+#define REGISTER_ZYGISK_MODULE(clazz) \
+    extern "C" [[gnu::visibility("default")]] zygisk::ModuleBase *zygisk_module_entry(zygisk::Api *api, JNIEnv *env) { \
+        return new clazz(); \
+    }
+
 #include "zygisk.h" 
 #include <android/log.h>
 #include <unistd.h>
@@ -165,5 +174,5 @@ private:
     JNIEnv* env;
 };
 
-// PERBAIKAN: Tanda titik koma (;) di ujung makro ini resmi dihapus agar bisa di-build!
+// Mengeksekusi macro kustom yang sudah kita paksa di baris paling atas (tanpa titik koma)
 REGISTER_ZYGISK_MODULE(BelajarZygiskModule)
