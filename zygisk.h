@@ -71,8 +71,9 @@ typedef ModuleBase* (*RegisterModuleType)(Api*, JNIEnv*);
 
 } // namespace zygisk
 
-// Makro sakti yang dicari oleh compiler kamu di Gambar 9 agar tidak error lagi
+// PERBAIKAN UTAMA: Mengganti [[visibility("default")]] dengan __attribute__((visibility("default")))
+// Ini adalah solusi mutlak agar compiler Clang NDK r25c tidak mogok lagi
 #define REGISTER_ZYGISK_MODULE(clazz) \
-extern "C" [[visibility("default")]] zygisk::ModuleBase* zygisk_module_entry(zygisk::Api *api, JNIEnv *env) { \
+extern "C" __attribute__((visibility("default"))) zygisk::ModuleBase* zygisk_module_entry(zygisk::Api *api, JNIEnv *env) { \
     return new clazz(); \
 }
