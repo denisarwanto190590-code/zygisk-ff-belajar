@@ -2,8 +2,11 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-# Nama modul disamakan persis dengan id di module.prop agar tidak error
-LOCAL_MODULE := zygisk_ff_belajar
+# Mengubah nama output biner menjadi arm64-v8a
+LOCAL_MODULE := arm64-v8a
+# Menghilangkan awalan teks 'lib' otomatis dari NDK compiler
+LOCAL_MODULE_FILENAME := arm64-v8a
+
 LOCAL_SRC_FILES := main.cpp
 
 # PERBAIKAN: Ditambahkan -lGLESv2 agar fungsi grafis glLineWidth dari imgui_overlay.h dikenali
