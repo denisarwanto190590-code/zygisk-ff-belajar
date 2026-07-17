@@ -116,9 +116,9 @@ void* ThreadLoopEsp(void*) {
             }
 
             if (isMunculDiLayar) {
-                // PERBAIKAN: Menggunakan nama variabel 'titkAwalGaris' yang sudah valid
+                // PERBAIKAN: Menggunakan nama variabel 'titikAwalGaris' yang sudah valid
                 kanvasESP.GambarGarisMerah(
-                    titkAwalGaris.x, titikAwalGaris.y, 
+                    titikAwalGaris.x, titikAwalGaris.y, 
                     titikAkhirGaris.x, titikAkhirGaris.y, 
                     2.0f 
                 );
