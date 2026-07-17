@@ -1,10 +1,11 @@
 #include <jni.h>
-#include "zygisk.h" // <-- WAJIB ADA BIAR TIDAK ERROR SEPERTI DI GAMBAR!
+#include "zygisk.h" 
 #include <android/log.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <stdio.h>  // Ditambahkan untuk fungsi fopen, fgets, fclose
 
 // Menghubungkan ke file kuas gambar yang barusan kita buat
 #include "imgui_overlay.h"
@@ -20,11 +21,11 @@ struct Vector3 { float x, y, z; };
 // =========================================================
 uintptr_t il2cpp_base = 0;
 
-#define OFFSET_PLAYER_MANAGER     0x558     // UGCCustomPlayerManager (Gambar 8)
-#define OFFSET_PLAYER_ENTITY      0x68      // m_LocalPlayerEntity (Gambar 2)
-#define OFFSET_EDIT_OBJ           0x10      // m_EditObj (Gambar 3)
-#define OFFSET_TRANSFORM          0x30      // UnityEngine.Transform (Gambar 4)
-#define OFFSET_WORLD_TO_SCREEN    0x80BFB2C // UGCAPIWorldToScreenPoint (Gambar 6)
+#define OFFSET_PLAYER_MANAGER     0x558     // UGCCustomPlayerManager
+#define OFFSET_PLAYER_ENTITY      0x68      // m_LocalPlayerEntity
+#define OFFSET_EDIT_OBJ           0x10      // m_EditObj
+#define OFFSET_TRANSFORM          0x30      // UnityEngine.Transform
+#define OFFSET_WORLD_TO_SCREEN    0x80BFB2C // UGCAPIWorldToScreenPoint
 
 // Membuat objek kanvas gambar global agar bisa diakses di dalam loop ESP
 ESPCanvas kanvasESP;
@@ -34,12 +35,42 @@ typedef bool (*_WorldToScreenPoint)(Vector3 position, Vector2* out_screen);
 _WorldToScreenPoint WorldToScreenPoint_Orig = nullptr;
 
 // =========================================================
+// FUNGSI MENCARI BASE ADDRESS LIBIL2CPP.SO
+// =========================================================
+uintptr_t DapatkanBaseAddress(const char* nama_library) {
+    uintptr_t address = 0;
+    char jalur[256];
+    char baris[512];
+    
+    FILE* f = fopen("/proc/self/maps", "r");
+    if (!f) return 0;
+
+    while (fgets(baris, sizeof(baris), f)) {
+        if (strstr(baris, nama_library)) {
+            // Mengambil alamat memori awal dari baris teks di maps
+            sscanf(baris, "%lx-%*x", &address);
+            break;
+        }
+    }
+    fclose(f);
+    return address;
+}
+
+// =========================================================
 // LOGIKA UTAMA ESP LINE VISUAL
 // =========================================================
 void* ThreadLoopEsp(void*) {
     LOGI("Thread ESP Berhasil Aktif di Latar Belakang!");
 
-    // Set ukuran layar HP standar (Nanti bisa diotomatisasi lewat fungsi Android)
+    // Tunggu sampai game benar-benar memuat libil2cpp.so ke memori
+    while (il2cpp_base == 0) {
+        il2cpp_base = DapatkanBaseAddress("libil2cpp.so");
+        usleep(500000); // Cek setiap 0.5 detik
+    }
+    
+    LOGI("Sistem Berhasil Menemukan Alamat libil2cpp.so: 0x%lx", il2cpp_base);
+
+    // Set ukuran layar HP standar
     int lebarLayar = 2340;
     int tinggiLayar = 1080;
     kanvasESP.InisialisasiKuas(lebarLayar, tinggiLayar);
@@ -50,17 +81,12 @@ void* ThreadLoopEsp(void*) {
     titkAwalGaris.y = (float)tinggiLayar;
 
     while (true) {
-        if (il2cpp_base == 0) {
-            usleep(500000);
-            continue;
-        }
-
-        // Deklarasikan fungsi WorldToScreen menggunakan offset 0x80BFB2C
+        // Deklarasikan fungsi WorldToScreen menggunakan offset
         if (WorldToScreenPoint_Orig == nullptr) {
             WorldToScreenPoint_Orig = (_WorldToScreenPoint)(il2cpp_base + OFFSET_WORLD_TO_SCREEN);
         }
 
-        // Alamat GameManager (Sebagai contoh jangkar memori utama game)
+        // Alamat GameManager
         uintptr_t gameManager = *reinterpret_cast<uintptr_t*>(il2cpp_base + 0x4ABCEF0); 
         if (!gameManager) { usleep(100000); continue; }
 
@@ -77,16 +103,18 @@ void* ThreadLoopEsp(void*) {
             uintptr_t dataMusuh = *reinterpret_cast<uintptr_t*>(playerList + (i * 0x8));
             if (!dataMusuh) continue;
 
-            // Rantaian pointer: 0x68 -> 0x10 -> 0x30 untuk dapat komponen Transform musuh
+            // Rantaian pointer ke komponen Transform musuh
             uintptr_t playerEntity = *reinterpret_cast<uintptr_t*>(dataMusuh + OFFSET_PLAYER_ENTITY);
+            if (!playerEntity) continue;
             uintptr_t editObj      = *reinterpret_cast<uintptr_t*>(playerEntity + OFFSET_EDIT_OBJ);
+            if (!editObj) continue;
             uintptr_t transform    = *reinterpret_cast<uintptr_t*>(editObj + OFFSET_TRANSFORM);
             if (!transform) continue;
 
             // Ambil posisi koordinat 3D musuh di map game
             Vector3 koordinat3D_Musuh = *reinterpret_cast<Vector3*>(transform + 0x90); 
 
-            // KONVERSI: Mengubah posisi 3D musuh menjadi koordinat 2D layar HP kamu
+            // KONVERSI: Mengubah posisi 3D musuh menjadi koordinat 2D layar
             Vector2 titikAkhirGaris;
             bool isMunculDiLayar = false;
             
@@ -97,9 +125,9 @@ void* ThreadLoopEsp(void*) {
             // EKSEKUSI VISUAL: Jika musuh terlihat oleh kamera game, gambar garis merahnya!
             if (isMunculDiLayar) {
                 kanvasESP.GambarGarisMerah(
-                    titkAwalGaris.x, titikAwalGaris.y, // Titik asal (Tengah bawah layar)
-                    titikAkhirGaris.x, titikAkhirGaris.y, // Titik ujung (Posisi musuh)
-                    2.0f // Ketebalan garis ESP (2 piksel)
+                    titkAwalGaris.x, titikAwalGaris.y, 
+                    titikAkhirGaris.x, titikAkhirGaris.y, 
+                    2.0f 
                 );
             }
         }
@@ -125,9 +153,7 @@ public:
         if (process_name && strcmp(process_name, "com.dts.freefireth") == 0) {
             LOGI("Game Free Fire Terdeteksi! Menyiapkan Sistem ESP Visual...");
             
-            // Ambil base address libil2cpp.so secara otomatis lewat fitur API Zygisk
-            il2cpp_base = 1; // Penanda bahwa game sudah terdeteksi aktif
-
+            // Membuat thread loop ESP secara terpisah
             pthread_t esp_thread;
             pthread_create(&esp_thread, nullptr, ThreadLoopEsp, nullptr);
         }
@@ -139,4 +165,5 @@ private:
     JNIEnv* env;
 };
 
-REGISTER_ZYGISK_MODULE(BelajarZygiskModule);
+// PERBAIKAN: Tanda titik koma (;) di ujung makro ini resmi dihapus agar bisa di-build!
+REGISTER_ZYGISK_MODULE(BelajarZygiskModule)
