@@ -1,4 +1,5 @@
 #include <jni.h>
+#include "zygisk.h" // <-- WAJIB ADA BIAR TIDAK ERROR SEPERTI DI GAMBAR!
 #include <android/log.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -125,7 +126,6 @@ public:
             LOGI("Game Free Fire Terdeteksi! Menyiapkan Sistem ESP Visual...");
             
             // Ambil base address libil2cpp.so secara otomatis lewat fitur API Zygisk
-            // Catatan: Pada Zygisk aslinya, kamu bisa mendaftarkan companion atau hook dlopen
             il2cpp_base = 1; // Penanda bahwa game sudah terdeteksi aktif
 
             pthread_t esp_thread;
